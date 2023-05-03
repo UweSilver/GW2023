@@ -33,5 +33,11 @@ namespace SelfDefence
             node.CameraGroup = cameraNode.Group;
             rootNode.AddChildNode(node);
         }
+
+        public void AddNode(CircleNode node)
+        {
+            node.CameraGroup = cameraNode.Group;
+            rootNode.AddChildNode(node);
+        }
     }
 }

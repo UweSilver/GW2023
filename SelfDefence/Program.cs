@@ -12,6 +12,8 @@ var game = new Game();
 while (Engine.DoEvents())
 {
     Engine.Update();
+    
+    game.Update();
 
     if (Engine.Keyboard.GetKeyState(Key.Escape) == ButtonState.Push)
     {

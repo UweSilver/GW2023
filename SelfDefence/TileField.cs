@@ -25,4 +25,9 @@ namespace SelfDefence
             return (position, isError);
         }
     }
+
+    internal class TileFieldObjectLayer<T> 
+    {
+        public Dictionary<Vector2I, T> LayerObjects = new();
+    }
 }
