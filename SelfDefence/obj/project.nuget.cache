@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "tO36gWKI27VzWMLIKXGsfSvyst9ZNdVpDXLLuJCG9LmsNbuzw0vgqE8j5bTK7AfJj5WfAgikEzLun6rzDkqUNQ==",
+  "success": true,
+  "projectFilePath": "D:\\projects\\GW2023\\SelfDefence\\SelfDefence.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\sator\\.nuget\\packages\\altseed2\\2.2.2\\altseed2.2.2.2.nupkg.sha512"
+  ],
+  "logs": []
+}

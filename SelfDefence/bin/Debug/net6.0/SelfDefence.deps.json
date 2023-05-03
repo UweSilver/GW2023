@@ -1,0 +1,62 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "SelfDefence/1.0.0": {
+        "dependencies": {
+          "Altseed2": "2.2.2"
+        },
+        "runtime": {
+          "SelfDefence.dll": {}
+        }
+      },
+      "Altseed2/2.2.2": {
+        "runtime": {
+          "lib/net5.0/Altseed2.dll": {
+            "assemblyVersion": "2.2.2.0",
+            "fileVersion": "2.2.2.0"
+          },
+          "lib/net5.0/PartsTreeSystem.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/linux-x64/native/libAltseed2_Core": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/osx-x64/native/libAltseed2_Core.dylib": {
+            "rid": "osx-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/Altseed2_Core.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SelfDefence/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Altseed2/2.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-h0i5M+bJDFLbNkpvyvLQXkWEOI9IxUgTJ15/nt2Il1CeHC6wYvuBbih932LATawa5F7StqoSg14Bw9O1gOuaJQ==",
+      "path": "altseed2/2.2.2",
+      "hashPath": "altseed2.2.2.2.nupkg.sha512"
+    }
+  }
+}
