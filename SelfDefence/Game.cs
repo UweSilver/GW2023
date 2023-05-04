@@ -24,7 +24,7 @@ namespace SelfDefence
             scene = new(0b11, 0b01, 1);
 
             //init field
-            var fieldSize = new Vector2I(55, 55);
+            var fieldSize = new Vector2I(25, 25);
             var fieldUnitSize = new Vector2F(30, 30);
             field = new(fieldSize, fieldUnitSize);
 
@@ -33,7 +33,7 @@ namespace SelfDefence
                 for(int j = 0; j < fieldSize.Y; j++)
                 {
                     var typeIdx = new Random().Next(1, 1000);
-                    if(typeIdx < 999) //normal tile
+                    if(typeIdx < 990) //normal tile
                     {
                         int value = new Random().Next(100, 100);
 
