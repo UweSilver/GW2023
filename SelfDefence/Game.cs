@@ -72,7 +72,12 @@ namespace SelfDefence
             UpdateLand();
 
             if(Engine.Keyboard.GetKeyState(Key.T) == ButtonState.Push)
+            {
                 RandomCrack();
+
+            }
+            if (Engine.Keyboard.GetKeyState(Key.G) == ButtonState.Push)
+                Console.WriteLine(Land.isReachable(player.Position, field.Size, (_) => _ is Tile t && t.State > player.WalkableLandState, (_) => _ is Rod));
             //scene.CameraNode.Scale *= 0.999f;
         }
 
@@ -121,7 +126,7 @@ namespace SelfDefence
             {
                 if(tile.State < 100)
                 {
-                    tile.State-= 1 * (1 / Engine.CurrentFPS);
+                    tile.State-= 100 * (1 / Engine.CurrentFPS);
                 }
             }
         }
