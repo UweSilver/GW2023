@@ -9,7 +9,7 @@ namespace SelfDefence
 {
     internal class Scene
     {
-        CameraNode cameraNode;
+        public CameraNode CameraNode { get; }
         Node rootNode;
 
         public Scene(ulong cameraGroup)
@@ -17,26 +17,26 @@ namespace SelfDefence
             rootNode = new Node();
             Engine.AddNode(rootNode);
 
-            cameraNode = new CameraNode();
-            cameraNode.Group = cameraGroup;
-            rootNode.AddChildNode(cameraNode);
+            CameraNode = new CameraNode();
+            CameraNode.Group = cameraGroup;
+            rootNode.AddChildNode(CameraNode);
         }
 
         public void AddNode(SpriteNode node)
         {
-            node.CameraGroup = cameraNode.Group;
+            node.CameraGroup = CameraNode.Group;
             rootNode.AddChildNode(node);
         }
 
         public void  AddNode(RectangleNode node)
         {
-            node.CameraGroup = cameraNode.Group;
+            node.CameraGroup = CameraNode.Group;
             rootNode.AddChildNode(node);
         }
 
         public void AddNode(CircleNode node)
         {
-            node.CameraGroup = cameraNode.Group;
+            node.CameraGroup = CameraNode.Group;
             rootNode.AddChildNode(node);
         }
     }

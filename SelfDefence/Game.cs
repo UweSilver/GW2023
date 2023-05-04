@@ -12,8 +12,7 @@ namespace SelfDefence
         Scene scene;
         TileField field;
 
-        TileFieldObjectLayer<(int, RectangleNode)> LandStatus = new(); // 0 is none, 100 is full
-        TileFieldObjectLayer<CircleNode> Lod = new();
+        TileFieldObjectLayer<Tile> Land = new();
         TileFieldObjectLayer<Entity> Entity = new();
 
         Player player = new();
@@ -22,6 +21,8 @@ namespace SelfDefence
         public Game()
         {
             scene = new(0b1);
+
+            scene.CameraNode.Scale *= 1.5f;
 
             //init field
             var fieldSize = new Vector2I(55, 55);
@@ -34,16 +35,14 @@ namespace SelfDefence
                 {
                     int value = new Random().Next(100, 100);
 
-                    var t = new RectangleNode();
-                    t.RectangleSize = fieldUnitSize * 0.9f;
-                    t.CenterPosition = t.RectangleSize / 2;
-                    var worldPos = field.AddressToPosition(new Vector2I(i, j));
-                    t.Position = !worldPos.Item2 ? worldPos.Item1 : new Vector2F(0, 0);
-                    t.Color = new Color((byte)(100 * value / 100), 80, 10);
+                    var tile = new Tile(new Vector2I(i, j), field.UnitSize, (_) => field.AddressToPosition(_).Item1, value);
+                    if(i == 0 || i == fieldSize.X - 1 || j == 0 || j == fieldSize.Y - 1)
+                    {
+                        tile.isEdge = true;
+                    }
 
-                    LandStatus.LayerObjects.Add(new Vector2I(i, j), (value, t));
-
-                    scene.AddNode(t);
+                    Land.LayerObjects.Add(tile.Position, tile);
+                    scene.AddNode(tile.Node);
                 }
             }
 
@@ -51,7 +50,7 @@ namespace SelfDefence
             {
                 player.Position = new Vector2I(10, 10);
                 var playerObj = new CircleNode();
-                playerObj.Radius = 10;
+                playerObj.Radius = field.UnitSize.X / 2f * 0.6f;
                 playerObj.VertNum = 25;
                 var worldPos = field.AddressToPosition(player.Position);
                 playerObj.Position = !worldPos.Item2 ? worldPos.Item1 : new Vector2F(0, 0);
@@ -81,17 +80,20 @@ namespace SelfDefence
         public void Update()
         {
             UpdatePlayer();
-            UpdateLand();
+            if(Engine.Keyboard.GetKeyState(Key.T) == ButtonState.Push)
+                UpdateLand();
             UpdateGameSystem();
+
+            //scene.CameraNode.Scale *= 0.999f;
         }
 
         void UpdatePlayer()
         {
             void Move(Vector2I vec)
             {
-                if (LandStatus.LayerObjects.TryGetValue(player.Position + vec, out var state) && !Entity.LayerObjects.ContainsKey(player.Position + vec))
+                if (Land.LayerObjects.TryGetValue(player.Position + vec, out var tile) && !Entity.LayerObjects.ContainsKey(player.Position + vec))
                 {
-                    if (state.Item1 >= player.WalkableLandState)
+                    if (tile.State >= player.WalkableLandState)
                     {
                         Entity.LayerObjects.Remove(player.Position);
                         player.Position += vec;
@@ -126,12 +128,37 @@ namespace SelfDefence
 
         void UpdateLand()
         {
-            var lodPos = lod.Position;
+            var candidate = Land.LayerObjects.Where(land => land.Value.isEdge).ToArray();
 
-            var target = new Vector2I(new Random().Next(0, field.Size.X), new Random().Next(0, field.Size.Y));
+            var target = new Random().Next(0, candidate.Length);
 
-            LandStatus.LayerObjects[target] = (LandStatus.LayerObjects[target].Item1 - 50, LandStatus.LayerObjects[target].Item2);
-            LandStatus.LayerObjects[target].Item2.Color = new Color((byte)(100 * LandStatus.LayerObjects[target].Item1 / 100), 80, 10);
+            var cutSize = new Vector2I(5, 5);
+
+            var direction = new Random().Next(0, 4);
+
+            cutSize *= direction switch
+            {
+                0 => new Vector2I(1, 1),
+                1 => new Vector2I(-1, 1),
+                2 => new Vector2I(-1, -1),
+                _ => new Vector2I(1, -1)
+            };
+
+            var targetPoint = candidate[target].Key;
+            var diagramPoint = targetPoint + cutSize;
+
+            for (int i = targetPoint.X; i != diagramPoint.X; i += cutSize.X / Math.Abs(cutSize.X))
+                for (int j = targetPoint.Y; j != diagramPoint.Y; j += cutSize.Y / Math.Abs(cutSize.Y))
+                {
+                    if(i == targetPoint.X || i == diagramPoint.X - cutSize.X / Math.Abs(cutSize.X) || j == targetPoint.Y || j == diagramPoint.Y - cutSize.Y / Math.Abs(cutSize.Y))
+                    {
+                        var pos = new Vector2I(i, j);
+                        if(Land.LayerObjects.TryGetValue(pos, out var obj))
+                        {
+                            obj.State -= 100;
+                        }
+                    }
+                }
         }
     }
 }
