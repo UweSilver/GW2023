@@ -15,7 +15,7 @@ namespace SelfDefence
     class Tile : Land
     {
         public Vector2I Position { get; }
-        public ShapeNode View => Node;
+        public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
         
         public float State
         {
@@ -51,12 +51,17 @@ namespace SelfDefence
             Node.Color = new Color((byte)(100 * State / 100), 80, 10);
         }
 
+        public void UpdateView()
+        {
+            UpdateColor();
+        }
+
     }
 
     class Rod : Land
     {
         public Vector2I Position { get; }
-        public ShapeNode View => Node;
+        public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
 
         private CircleNode Node;
 
@@ -71,6 +76,8 @@ namespace SelfDefence
             Node.Position = !getPos.isError ? getPos.position : new Vector2F(0, 0);
             Node.Color = new Color(250, 250, 250);
         }
+
+        public void UpdateView() { }
     }
 
 }

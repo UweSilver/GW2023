@@ -34,10 +34,13 @@ namespace SelfDefence
             //SplitScreen(cameraNum);
         }
 
-        public void AddNode(ShapeNode node)
+        public void AddNode(IEnumerable<ShapeNode> nodes)
         {
-            node.CameraGroup = SceneCameraGroup;
-            rootNode.AddChildNode(node);
+            foreach(var node in nodes)
+            {
+                node.CameraGroup = SceneCameraGroup;
+                rootNode.AddChildNode(node);
+            }
         }
 
         public void RemoveNode(ShapeNode node)

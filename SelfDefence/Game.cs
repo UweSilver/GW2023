@@ -78,6 +78,15 @@ namespace SelfDefence
                 CrackTimer = 0;
             }
             CheckLand();
+
+            if(Engine.Keyboard.GetKeyState(Key.T) == ButtonState.Push)
+            {
+                DroppedItem item = new(field.AddressToPosition);
+                item.Position = new Vector2I(20, 20);
+                item.Content = new Footing(field.UnitSize);
+                item.UpdateView();
+                scene.AddNode(item.View);
+            }
         }
 
         void UpdatePlayer()
@@ -94,7 +103,7 @@ namespace SelfDefence
                     }
                 }
 
-                player.View.Position = field.AddressToPosition(player.Position).Item1;
+                player.UpdateView();
             }
             if(Engine.Keyboard.GetKeyState(Key.W) == ButtonState.Push)
             {

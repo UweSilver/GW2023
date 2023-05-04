@@ -79,6 +79,8 @@ namespace SelfDefence
     interface FieldObject
     {
         public Vector2I Position { get; }
-        public ShapeNode View { get; }
+        public IEnumerable<ShapeNode> View { get; }
+
+        public void UpdateView();
     }
 }

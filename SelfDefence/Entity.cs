@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,9 +18,11 @@ namespace SelfDefence
 
         public int WalkableLandState = 20;
 
-        public ShapeNode View => Node;
+        public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
 
         private CircleNode Node;
+
+        ItemClass? Inventory = null;
 
         Address2WorldPos address2WorldPos;
 
@@ -35,6 +38,12 @@ namespace SelfDefence
             var getPosition = address2WorldPos(address);
             Node.Position = !getPosition.isError ? getPosition.position : new Vector2F(0, 0);
             Node.Color = new Color(10, 10, 150);
+        }
+
+        public void UpdateView()
+        {
+            var getPosition = address2WorldPos(Position);
+            Node.Position = !getPosition.isError ? getPosition.position : new Vector2F(0, 0);
         }
     }
 }
