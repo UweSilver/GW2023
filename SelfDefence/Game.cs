@@ -16,13 +16,14 @@ namespace SelfDefence
         TileFieldObjectLayer<Entity> Entity = new();
 
         Player player;
-        
+
+        float CrackTimer;
+                
         public Game()
         {
             scene = new(0b11, 0b01, 1);
 
             
-
             //init field
             var fieldSize = new Vector2I(55, 55);
             var fieldUnitSize = new Vector2F(30, 30);
@@ -33,7 +34,7 @@ namespace SelfDefence
                 for(int j = 0; j < fieldSize.Y; j++)
                 {
                     var typeIdx = new Random().Next(1, 1000);
-                    if(typeIdx < 990) //normal tile
+                    if(typeIdx < 999) //normal tile
                     {
                         int value = new Random().Next(100, 100);
 
@@ -67,17 +68,18 @@ namespace SelfDefence
 
         public void Update()
         {
+            CrackTimer += (1 / Engine.CurrentFPS);
+
             UpdatePlayer();
             UpdateGameSystem();
             UpdateLand();
 
-            if(Engine.Keyboard.GetKeyState(Key.T) == ButtonState.Push)
+            if(CrackTimer > 5)
             {
                 RandomCrack();
-
+                CrackTimer = 0;
             }
-            if (Engine.Keyboard.GetKeyState(Key.G) == ButtonState.Push)
-                CheckLand();
+            CheckLand();
             //scene.CameraNode.Scale *= 0.999f;
         }
 
