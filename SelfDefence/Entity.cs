@@ -29,7 +29,7 @@ namespace SelfDefence
         }
         protected Vector2I direction;
 
-        public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
+        public IEnumerable<IDrawn> View => new ShapeNode[] { Node };
 
         protected CircleNode Node;
 

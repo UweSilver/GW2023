@@ -10,7 +10,7 @@ namespace SelfDefence
     class DroppedItem : Entity
     {
         public Vector2I Position { get; set; }
-        public IEnumerable<ShapeNode> View => Content.View;
+        public IEnumerable<IDrawn> View => Content.View;
         public ItemClass Content;
 
         Address2WorldPos address2worldPos;
@@ -23,15 +23,19 @@ namespace SelfDefence
         {
             foreach(var v in View)
             {
-                var getPos = address2worldPos(Position);
-                v.Position = !getPos.isError ? getPos.position : new Vector2I(0, 0);
+                if(v is TransformNode t)
+                {
+                    var getPos = address2worldPos(Position);
+                    t.Position = !getPos.isError ? getPos.position : new Vector2I(0, 0);
+                }
             }
         }
     }
 
     interface ItemClass 
     {
-        IEnumerable<ShapeNode> View { get; }
+        IEnumerable<IDrawn> View { get; }
+        float Height { get; set; }
     }
 
     class Footing : ItemClass
@@ -55,6 +59,8 @@ namespace SelfDefence
             node.Add(item);
         }
 
+        public float Height { get; set; }
+
         public void Use(Vector2I targetAddress, TileFieldObjectLayer<Land> field) 
         {
             if(field.LayerObjects.TryGetValue(targetAddress, out var land))
@@ -67,7 +73,7 @@ namespace SelfDefence
         }
 
         List<ShapeNode> node = new();
-        public IEnumerable<ShapeNode> View => node;
+        public IEnumerable<IDrawn> View => node;
     }
 
     class Bomb : ItemClass
@@ -83,9 +89,50 @@ namespace SelfDefence
             }
         }
 
-        public IEnumerable<ShapeNode> View
+        public float Height { get; set; }
+
+        public Bomb(Vector2F unitSize)
         {
-            get { return new ShapeNode[] { new CircleNode() }; }
+            var body = new CircleNode();
+            body.Color = new Color(10, 10, 10);
+            body.Radius = unitSize.X * 0.9f / 2;
+            body.VertNum = 25;
+
+            node.Add(body);
         }
+
+        public IEnumerable<IDrawn> View
+        {
+            get => node;
+        }
+
+        List<ShapeNode> node = new();
+    }
+
+    class RespawnPoint : ItemClass
+    {
+        public RespawnPoint(Vector2F unitSize, Color color)
+        {
+            var star = new PolygonNode();
+            var vertices = new List<Vertex>();
+            for(int i = 0; i < 5; i++)
+            {
+                var Rad = unitSize.X * 0.9f * 0.5f;
+                var rad = unitSize.X * 0.3f * 0.5f;
+
+                var angle0 = i * 2.0f * MathF.PI / 5.0f;
+                var angle1 = (i + 0.5f) * 2.0f * MathF.PI / 5.0f;
+                vertices.Add(new Vertex( new Vector3F(Rad * MathF.Cos(angle0), Rad * MathF.Sin(angle0), 0), color, new Vector2F(0, 0), new Vector2F(0, 0)));
+                vertices.Add(new Vertex(new Vector3F(rad * MathF.Cos(angle1), rad * MathF.Sin(angle1), 0), color, new Vector2F(0, 0), new Vector2F(0, 0)));
+            }
+            star.Vertexes = vertices;
+
+            node.Add(star);
+        }
+
+        List<PolygonNode> node = new();
+        public IEnumerable<IDrawn> View => node;
+
+        public float Height { get; set; }
     }
 }

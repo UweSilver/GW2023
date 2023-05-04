@@ -15,7 +15,7 @@ namespace SelfDefence
     class Tile : Land
     {
         public Vector2I Position { get; }
-        public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
+        public IEnumerable<IDrawn> View => new ShapeNode[] { Node };
         
         public float State
         {
@@ -61,7 +61,7 @@ namespace SelfDefence
     class Rod : Land
     {
         public Vector2I Position { get; }
-        public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
+        public IEnumerable<IDrawn> View => new ShapeNode[] { Node };
 
         private CircleNode Node;
 

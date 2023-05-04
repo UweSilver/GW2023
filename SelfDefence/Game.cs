@@ -14,21 +14,28 @@ namespace SelfDefence
 
         TileFieldObjectLayer<Land> Land = new();
         TileFieldObjectLayer<Entity> Entity = new();
+        TileFieldObjectLayer<ItemClass> FlyingEntity = new();
 
         Player player;
 
         float CrackTimer;
+        float ItemTimer;
                 
         public Game()
         {
             scene = new(0b11, 0b01, 1);
 
             //init field
-            var fieldSize = new Vector2I(25, 25);
+            var fieldSize = new Vector2I(45, 25);
             var fieldUnitSize = new Vector2F(30, 30);
             field = new(fieldSize, fieldUnitSize);
 
-            for(int i = 0; i < fieldSize.X; i++)
+            var getPos = field.AddressToPosition(fieldSize / 2);
+            scene.MainCamera.Scale *= 1.2f;
+            scene.MainCamera.Position = (!getPos.Item2 ? getPos.Item1 : new Vector2F(0, 0)) - Engine.WindowSize.To2F() * 1.2f / 2.0f;
+            //scene.MainCamera.Position = new Vector2F(0, 0);
+
+            for (int i = 0; i < fieldSize.X; i++)
             {
                 for(int j = 0; j < fieldSize.Y; j++)
                 {
@@ -67,9 +74,10 @@ namespace SelfDefence
         public void Update()
         {
             CrackTimer += (1 / Engine.CurrentFPS);
+            ItemTimer += (1 / Engine.CurrentFPS);
 
             UpdatePlayer();
-            UpdateGameSystem();
+            UpdateFlyingItems();
             UpdateLand();
 
             if(CrackTimer > 5)
@@ -77,17 +85,50 @@ namespace SelfDefence
                 RandomCrack();
                 CrackTimer = 0;
             }
-            CheckLand();
-
-            if(Engine.Keyboard.GetKeyState(Key.T) == ButtonState.Push)
+            if(ItemTimer > 2.5)
             {
-                DroppedItem item = new(field.AddressToPosition);
-                item.Position = new Vector2I(20, 20);
-                item.Content = new Footing(field.UnitSize);
-                item.UpdateView();
-                Entity.LayerObjects.Add(item.Position, item);
-                scene.AddNode(item.View);
+                var rand = new Random().Next(0, 100);
+                int h = 5;
+
+                var pos = new Vector2I(new Random().Next(0, field.Size.X), new Random().Next(0, field.Size.Y));
+                while(FlyingEntity.LayerObjects.ContainsKey(pos) || Entity.LayerObjects.ContainsKey(pos) || (Land.LayerObjects.TryGetValue(pos, out var land) && land is Rod))
+                {
+                    pos = new Vector2I(new Random().Next(0, field.Size.X), new Random().Next(0, field.Size.Y));
+                }
+
+                if(rand <= 70)
+                {
+                    var item = new Footing(field.UnitSize);
+                    item.Height = h;
+                    FlyingEntity.LayerObjects.Add(pos, item);
+                    var targetPos = field.AddressToPosition(pos);
+                    foreach(var v in item.View)
+                    {
+                        if(v is ShapeNode t)
+                            t.Position = targetPos.Item1 + new Vector2F(0, -1) * item.Height * field.UnitSize.Y;
+                    }
+                    scene.AddNode(item.View);
+                }
+                else if(rand  > 70)
+                {
+                    var item = new Bomb(field.UnitSize);
+                    item.Height = h;
+                    FlyingEntity.LayerObjects.Add(pos, item);
+                    var targetPos = field.AddressToPosition(pos);
+                    foreach (var v in item.View)
+                    {
+                        if (v is ShapeNode t)
+                            t.Position = targetPos.Item1 + new Vector2F(0, -1) * item.Height * field.UnitSize.Y;
+                    }
+                    scene.AddNode(item.View);
+                }
+
+                ItemTimer = 0;
             }
+
+            CheckLand();
+            CheckEntity();
+
         }
 
         void UpdatePlayer()
@@ -126,7 +167,7 @@ namespace SelfDefence
                 Move(new Vector2I(1, 0));
                 player.Direction = new Vector2I(1, 0);
             }
-            if(Engine.Keyboard.GetKeyState(Key.Q) == ButtonState.Push)
+            if(Engine.Keyboard.GetKeyState(Key.E) == ButtonState.Push)
             {
                 if(player.Inventory != null)
                 {
@@ -137,6 +178,11 @@ namespace SelfDefence
                         if(Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State < 100)
                         {
                             tile.State = 100;
+                            player.Inventory = null;
+                        }
+                        else if(land is Rod)
+                        {
+                            CrackTimer -= 5;
                             player.Inventory = null;
                         }
                     }
@@ -158,9 +204,74 @@ namespace SelfDefence
             }
         }
 
-        void UpdateGameSystem()
+        void UpdateFlyingItems()
         {
+            Queue<Vector2I> removelist = new();
+            foreach(var item in FlyingEntity.LayerObjects)
+            {
+                if(item.Value.Height > 0)
+                {
+                    item.Value.Height -= (1 / Engine.CurrentFPS);
+                    
+                    foreach(var v in item.Value.View)
+                    {
+                        if(v is ShapeNode t)
+                        {
+                            var targetPos = field.AddressToPosition(item.Key);
+                            t.Position = targetPos.Item1 + new Vector2F(0, -1) * item.Value.Height * field.UnitSize.Y;
+                        }
+                    }
+                }
 
+                if(item.Value.Height <= 0)
+                {
+                    removelist.Enqueue(item.Key);
+
+                    if(item.Value is Footing footing)
+                    {
+                        var dropped = new DroppedItem(field.AddressToPosition) { Content = item.Value, Position = item.Key };
+                        //scene.AddNode(dropped.View);
+                        dropped.UpdateView();
+                        Entity.LayerObjects.Add(item.Key, dropped);
+                        removelist.Enqueue(item.Key);
+                    }
+                    else if(item.Value is Bomb bomb)
+                    {
+                        if(Entity.LayerObjects.TryGetValue(item.Key, out var entity) && entity is Player p && p.Inventory == null)
+                        {
+                            p.Inventory = bomb;
+                            scene.RemoveNode(bomb.View);
+                        }
+                        else if(Land.LayerObjects.TryGetValue(item.Key, out var land) && land is Tile tile)
+                        {
+                            tile.State = 0;
+                            scene.RemoveNode(bomb.View);
+                        }
+                        removelist.Enqueue(item.Key);
+                    }
+                }
+            }
+
+            foreach (var v in removelist)
+                FlyingEntity.LayerObjects.Remove(v);
+        }
+
+        void CheckEntity()
+        {
+            Queue<Vector2I> remove = new(); 
+            foreach(var e in Entity.LayerObjects)
+            {
+                var pos = e.Key;
+                if (Land.LayerObjects.TryGetValue(pos, out var land) && land is Tile tile && tile.State <= 0)
+                {
+                    remove.Enqueue(pos);
+                }
+            }
+
+            foreach(var v in remove)
+            {
+                Entity.LayerObjects.Remove(v);
+            }
         }
 
         void UpdateLand()
@@ -210,27 +321,28 @@ namespace SelfDefence
                     }
             }
         void RandomCrack()
+        {
+            var candidates = Land.LayerObjects.Where(land => land.Value is Tile);
+
+            var targetIdx = new Random().Next(0, candidates.Count());
+            var target = candidates.Skip(targetIdx).First().Key;
+
+            var directionIdx = new Random().Next(0, 2);
+            var direction = directionIdx switch
             {
-                var candidates = Land.LayerObjects.Where(land => land.Value is Tile);
+                0 => new Vector2I(1, 0),
+                _ => new Vector2I(0, 1),
+            };
 
-                var targetIdx = new Random().Next(0, candidates.Count());
-                var target = candidates.Skip(targetIdx).First().Key;
-
-                var directionIdx = new Random().Next(0, 2);
-                var direction = directionIdx switch
+            var rand = new Random();
+            for (Vector2I address = target * (new Vector2I(1, 1) - direction); address.X < field.Size.X && address.Y < field.Size.Y; address += direction)
+            {
+                if (Land.LayerObjects.TryGetValue(address, out var obj) && obj is Tile tile && rand.Next(0, 100) > 60)
                 {
-                    0 => new Vector2I(1, 0),
-                    _ => new Vector2I(0, 1),
-                };
-
-                for (Vector2I address = target * (new Vector2I(1, 1) - direction); address.X < field.Size.X && address.Y < field.Size.Y; address += direction)
-                {
-                    if (Land.LayerObjects.TryGetValue(address, out var obj) && obj is Tile tile)
-                    {
-                        tile.State -= 5;
-                    }
+                    tile.State -= 5;
                 }
             }
+        }
 
         void CheckLand()
         {

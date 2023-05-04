@@ -16,6 +16,7 @@ namespace SelfDefence
         List<RenderTexture> renderTargets = new();
         CameraNode masterCameraNode;
 
+        public CameraNode MainCamera;
         Node rootNode;
 
         public Scene(ulong sceneCameraGroup, ulong renderTargetCameraGroup, uint cameraNum)
@@ -26,26 +27,26 @@ namespace SelfDefence
             rootNode = new Node();
             Engine.AddNode(rootNode);
 
-            var cam = new CameraNode();
-            cam.Group = sceneCameraGroup;
-            Engine.AddNode(cam);
+            MainCamera = new CameraNode();
+            MainCamera.Group = sceneCameraGroup;
+            Engine.AddNode(MainCamera);
 
             //SplitScreen(cameraNum);
         }
 
-        public void AddNode(IEnumerable<ShapeNode> nodes)
+        public void AddNode(IEnumerable<IDrawn> nodes)
         {
             foreach(var node in nodes)
             {
                 node.CameraGroup = SceneCameraGroup;
-                rootNode.AddChildNode(node);
+                rootNode.AddChildNode(node as Node);
             }
         }
 
-        public void RemoveNode(IEnumerable<ShapeNode> nodes)
+        public void RemoveNode(IEnumerable<IDrawn> nodes)
         {
             foreach(var node in nodes)
-                rootNode.RemoveChildNode(node);
+                rootNode.RemoveChildNode(node as Node);
         }
 
         void SplitScreen(uint num)
