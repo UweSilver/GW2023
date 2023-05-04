@@ -12,30 +12,32 @@ namespace SelfDefence
     {
     }
 
-    internal class Player : Entity
+    class Character : Entity
     {
         public Vector2I Position { get; set; }
 
         public int WalkableLandState = 20;
 
-        public Vector2I Direction { 
-            get => direction; 
-            set {
+        public Vector2I Direction
+        {
+            get => direction;
+            set
+            {
                 direction = value;
                 UpdateView();
-            } 
+            }
         }
-        Vector2I direction;
+        protected Vector2I direction;
 
         public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
 
-        private CircleNode Node;
+        protected CircleNode Node;
 
         public ItemClass? Inventory = null;
 
-        Address2WorldPos address2WorldPos;
+        protected Address2WorldPos address2WorldPos;
 
-        public Player(Vector2I address, Vector2F unitSize, Address2WorldPos address2WorldPos)
+        public Character(Vector2I address, Vector2F unitSize, Address2WorldPos address2WorldPos)
         {
             Position = address;
             this.address2WorldPos = address2WorldPos;
@@ -63,6 +65,32 @@ namespace SelfDefence
                 Vector2I(-1, 0) => -90,
                 _ => 0
             };
+        }
+    }
+
+    class Player : Character
+    {
+        public Player(Vector2I address, Vector2F unitSize, Address2WorldPos address2WorldPos) : base(address, unitSize, address2WorldPos) 
+        {
+            Node.Color = new Color(10, 10, 150);
+        }
+    }
+
+    class NPC : Character
+    {
+        public NPC(Vector2I address, Vector2F unitSize, Address2WorldPos address2WorldPos) :base(address, unitSize, address2WorldPos)
+        {
+            Node.Color = new Color(150, 10, 10);
+        }
+
+        public void Update()
+        {
+
+        }
+
+        public void SetObjective()
+        {
+
         }
     }
 }

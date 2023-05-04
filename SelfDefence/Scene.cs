@@ -28,7 +28,6 @@ namespace SelfDefence
 
             var cam = new CameraNode();
             cam.Group = sceneCameraGroup;
-            cam.Scale *= 2;
             Engine.AddNode(cam);
 
             //SplitScreen(cameraNum);
