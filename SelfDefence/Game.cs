@@ -23,7 +23,6 @@ namespace SelfDefence
         {
             scene = new(0b11, 0b01, 1);
 
-            
             //init field
             var fieldSize = new Vector2I(55, 55);
             var fieldUnitSize = new Vector2F(30, 30);
@@ -53,7 +52,6 @@ namespace SelfDefence
                         Land.LayerObjects.Add(rod.Position, rod);
                         scene.AddNode(rod.View);
                     }
-                    
                 }
             }
 
@@ -80,7 +78,6 @@ namespace SelfDefence
                 CrackTimer = 0;
             }
             CheckLand();
-            //scene.CameraNode.Scale *= 0.999f;
         }
 
         void UpdatePlayer()
@@ -245,26 +242,26 @@ namespace SelfDefence
             }
 
             int count = 0;
-                for(int i = 0; i < field.Size.X; i++)
-                    for(int j = 0; j < field.Size.Y; j++)
+            for(int i = 0; i < field.Size.X; i++)
+                for(int j = 0; j < field.Size.Y; j++)
+                {
+                    if (check[i][j]) continue;
+                    if(Land.LayerObjects.TryGetValue(new Vector2I(i, j), out var obj))
                     {
-                        if (check[i][j]) break;
-                        if(Land.LayerObjects.TryGetValue(new Vector2I(i, j), out var obj))
+                        if((obj is Tile t && t.State > player.WalkableLandState))
                         {
-                            if((obj is Tile t && t.State > player.WalkableLandState))
-                            {
-                                var queue = new Queue<Vector2I>();
-                                connectedToRod[i][j] = isReachable(new Vector2I(i, j), field.Size, (_) => { check[_.X][_.Y] = true; queue.Enqueue(_); });
+                            var queue = new Queue<Vector2I>();
+                            connectedToRod[i][j] = isReachable(new Vector2I(i, j), field.Size, (_) => { check[_.X][_.Y] = true; queue.Enqueue(_); });
 
-                                foreach(var p in queue)
-                                {
-                                    check[p.X][p.Y] = true;
-                                    connectedToRod[p.X][p.Y] = connectedToRod[i][j];
-                                }
-                                count += queue.Count();
+                            foreach(var p in queue)
+                            {
+                                check[p.X][p.Y] = true;
+                                connectedToRod[p.X][p.Y] = connectedToRod[i][j];
                             }
+                            count += queue.Count();
                         }
                     }
+                }
 
             for(int i = 0; i < field.Size.X; i++)
                 for(int j = 0; j < field.Size.Y; j++)
