@@ -17,16 +17,16 @@ namespace SelfDefence
         public Vector2I Position { get; }
         public ShapeNode View => Node;
         
-        public int State
+        public float State
         {
             get { return state; }
             set
             {
-                state = value;
+                state = Math.Max(value, 0);
                 UpdateColor();
             }
         } //0 is none, 100 is full
-        int state;
+        float state;
 
         private RectangleNode Node;
 
@@ -71,4 +71,5 @@ namespace SelfDefence
             Node.Color = new Color(250, 250, 250);
         }
     }
+
 }
