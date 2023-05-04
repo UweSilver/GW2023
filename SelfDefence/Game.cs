@@ -85,6 +85,7 @@ namespace SelfDefence
                 item.Position = new Vector2I(20, 20);
                 item.Content = new Footing(field.UnitSize);
                 item.UpdateView();
+                Entity.LayerObjects.Add(item.Position, item);
                 scene.AddNode(item.View);
             }
         }
@@ -108,18 +109,52 @@ namespace SelfDefence
             if(Engine.Keyboard.GetKeyState(Key.W) == ButtonState.Push)
             {
                 Move(new Vector2I(0, -1));
+                player.Direction = new Vector2I(0, -1);
             }
             if(Engine.Keyboard.GetKeyState(Key.A) == ButtonState.Push)
             {
                 Move(new Vector2I(-1, 0));
+                player.Direction = new Vector2I(-1, 0);
             }
             if(Engine.Keyboard.GetKeyState(Key.S) == ButtonState.Push)
             {
                 Move(new Vector2I(0, 1));
+                player.Direction = new Vector2I(0, 1);
             }
             if(Engine.Keyboard.GetKeyState(Key.D) == ButtonState.Push)
             {
                 Move(new Vector2I(1, 0));
+                player.Direction = new Vector2I(1, 0);
+            }
+            if(Engine.Keyboard.GetKeyState(Key.Q) == ButtonState.Push)
+            {
+                if(player.Inventory != null)
+                {
+                    //use/release
+                    if(player.Inventory is Footing footing)
+                    {
+                        var focusPos = player.Position + player.Direction;
+                        if(Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State < 100)
+                        {
+                            tile.State = 100;
+                            player.Inventory = null;
+                        }
+                    }
+                }
+                else
+                {
+                    //grub
+                    var focusPos = player.Position + player.Direction;
+                    if(Entity.LayerObjects.TryGetValue(focusPos, out var entity))
+                    {
+                        if(entity is DroppedItem item)
+                        {
+                            player.Inventory = item.Content;
+                            Entity.LayerObjects.Remove(item.Position);
+                            scene.RemoveNode(item.View);
+                        }
+                    }
+                }
             }
         }
 

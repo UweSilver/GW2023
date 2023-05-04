@@ -18,11 +18,20 @@ namespace SelfDefence
 
         public int WalkableLandState = 20;
 
+        public Vector2I Direction { 
+            get => direction; 
+            set {
+                direction = value;
+                UpdateView();
+            } 
+        }
+        Vector2I direction;
+
         public IEnumerable<ShapeNode> View => new ShapeNode[] { Node };
 
         private CircleNode Node;
 
-        ItemClass? Inventory = null;
+        public ItemClass? Inventory = null;
 
         Address2WorldPos address2WorldPos;
 
@@ -33,7 +42,8 @@ namespace SelfDefence
 
             Node = new CircleNode();
             Node.Radius = unitSize.X / 2f * 0.6f;
-            Node.VertNum = 25;
+            Node.VertNum = 3;
+            Node.Angle = -90;
 
             var getPosition = address2WorldPos(address);
             Node.Position = !getPosition.isError ? getPosition.position : new Vector2F(0, 0);
@@ -44,6 +54,15 @@ namespace SelfDefence
         {
             var getPosition = address2WorldPos(Position);
             Node.Position = !getPosition.isError ? getPosition.position : new Vector2F(0, 0);
+
+            Node.Angle = -90 + direction switch
+            {
+                Vector2I(0, -1) => 0,
+                Vector2I(0, 1) => 180,
+                Vector2I(1, 0) => 90,
+                Vector2I(-1, 0) => -90,
+                _ => 0
+            };
         }
     }
 }

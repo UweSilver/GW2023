@@ -43,9 +43,10 @@ namespace SelfDefence
             }
         }
 
-        public void RemoveNode(ShapeNode node)
+        public void RemoveNode(IEnumerable<ShapeNode> nodes)
         {
-            rootNode.RemoveChildNode(node);
+            foreach(var node in nodes)
+                rootNode.RemoveChildNode(node);
         }
 
         void SplitScreen(uint num)
