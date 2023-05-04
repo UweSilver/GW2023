@@ -22,22 +22,15 @@ namespace SelfDefence
             rootNode.AddChildNode(CameraNode);
         }
 
-        public void AddNode(SpriteNode node)
+        public void AddNode(ShapeNode node)
         {
             node.CameraGroup = CameraNode.Group;
             rootNode.AddChildNode(node);
         }
 
-        public void  AddNode(RectangleNode node)
+        public void RemoveNode(ShapeNode node)
         {
-            node.CameraGroup = CameraNode.Group;
-            rootNode.AddChildNode(node);
-        }
-
-        public void AddNode(CircleNode node)
-        {
-            node.CameraGroup = CameraNode.Group;
-            rootNode.AddChildNode(node);
+            rootNode.RemoveChildNode(node);
         }
     }
 }

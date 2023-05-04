@@ -7,8 +7,16 @@ using System.Threading.Tasks;
 
 namespace SelfDefence
 {
-    internal class Tile
+
+    interface Land : FieldObject
     {
+    }
+
+    class Tile : Land
+    {
+        public Vector2I Position { get; }
+        public ShapeNode View => Node;
+        
         public int State
         {
             get { return state; }
@@ -20,8 +28,7 @@ namespace SelfDefence
         } //0 is none, 100 is full
         int state;
 
-        public Vector2I Position;
-        public RectangleNode Node;
+        private RectangleNode Node;
 
         public bool isEdge;
 
@@ -30,7 +37,8 @@ namespace SelfDefence
             Node = new RectangleNode();
             Node.RectangleSize = unitSize * 0.9f;
             Node.CenterPosition = unitSize / 2;
-            Node.Position = address2WorldPos(address);
+            var getPos = address2WorldPos(address);
+            Node.Position = !getPos.isError ? getPos.position : new Vector2F(0, 0);
 
             Position = address;
             State = initState;
@@ -42,7 +50,25 @@ namespace SelfDefence
         {
             Node.Color = new Color((byte)(100 * State / 100), 80, 10);
         }
+    }
 
-        public delegate Vector2F Address2WorldPos(Vector2I address);
+    class Rod : Land
+    {
+        public Vector2I Position { get; }
+        public ShapeNode View => Node;
+
+        private CircleNode Node;
+
+        public Rod(Vector2I address, Vector2F unitSize, Address2WorldPos address2WorldPos)
+        {
+            Position = address;
+
+            Node = new CircleNode();
+            Node.Radius = unitSize.X;
+            Node.VertNum = 5;
+            var getPos = address2WorldPos(Position);
+            Node.Position = !getPos.isError ? getPos.position : new Vector2F(0, 0);
+            Node.Color = new Color(250, 250, 250);
+        }
     }
 }

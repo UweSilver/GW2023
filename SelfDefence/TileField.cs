@@ -26,8 +26,16 @@ namespace SelfDefence
         }
     }
 
+    public delegate (Vector2F position, bool isError) Address2WorldPos(Vector2I address);
+
     internal class TileFieldObjectLayer<T> 
     {
         public Dictionary<Vector2I, T> LayerObjects = new();
+    }
+
+    interface FieldObject
+    {
+        public Vector2I Position { get; }
+        public ShapeNode View { get; }
     }
 }

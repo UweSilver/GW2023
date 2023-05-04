@@ -12,11 +12,10 @@ namespace SelfDefence
         Scene scene;
         TileField field;
 
-        TileFieldObjectLayer<Tile> Land = new();
+        TileFieldObjectLayer<Land> Land = new();
         TileFieldObjectLayer<Entity> Entity = new();
 
-        Player player = new();
-        Lod lod = new();
+        Player player;
         
         public Game()
         {
@@ -35,45 +34,28 @@ namespace SelfDefence
                 {
                     int value = new Random().Next(100, 100);
 
-                    var tile = new Tile(new Vector2I(i, j), field.UnitSize, (_) => field.AddressToPosition(_).Item1, value);
+                    var tile = new Tile(new Vector2I(i, j), field.UnitSize, field.AddressToPosition, value);
                     if(i == 0 || i == fieldSize.X - 1 || j == 0 || j == fieldSize.Y - 1)
                     {
                         tile.isEdge = true;
                     }
 
                     Land.LayerObjects.Add(tile.Position, tile);
-                    scene.AddNode(tile.Node);
+                    scene.AddNode(tile.View);
                 }
             }
 
             //init player
             {
-                player.Position = new Vector2I(10, 10);
-                var playerObj = new CircleNode();
-                playerObj.Radius = field.UnitSize.X / 2f * 0.6f;
-                playerObj.VertNum = 25;
-                var worldPos = field.AddressToPosition(player.Position);
-                playerObj.Position = !worldPos.Item2 ? worldPos.Item1 : new Vector2F(0, 0);
-                playerObj.Color = new Color(10, 10, 150);
-                player.Node = playerObj;
+                player = new Player(new Vector2I(10, 10), field.UnitSize, field.AddressToPosition);
 
                 Entity.LayerObjects.Add(player.Position, player);
-                scene.AddNode(playerObj);
+                scene.AddNode(player.View);
             }
 
-            //init lod
+            //init rod
             {
-                var lodObj = new CircleNode();
-                lodObj.Radius = 20;
-                lodObj.VertNum = 5;
-                var worldPos = field.AddressToPosition(new Vector2I(20, 20));
-                lodObj.Position = !worldPos.Item2 ? worldPos.Item1 : new Vector2F(0, 0);
-                lodObj.Color = new Color(250, 250, 250);
-
-                lod.Node = lodObj;
-                lod.Position = new Vector2I(20, 20);
-                Entity.LayerObjects.Add(new Vector2I(20, 20), lod);
-                scene.AddNode(lodObj);
+                //Land
             }
         }
 
@@ -91,9 +73,9 @@ namespace SelfDefence
         {
             void Move(Vector2I vec)
             {
-                if (Land.LayerObjects.TryGetValue(player.Position + vec, out var tile) && !Entity.LayerObjects.ContainsKey(player.Position + vec))
+                if (Land.LayerObjects.TryGetValue(player.Position + vec, out var land) && !Entity.LayerObjects.ContainsKey(player.Position + vec))
                 {
-                    if (tile.State >= player.WalkableLandState)
+                    if (land is Tile tile && tile.State >= player.WalkableLandState)
                     {
                         Entity.LayerObjects.Remove(player.Position);
                         player.Position += vec;
@@ -101,7 +83,7 @@ namespace SelfDefence
                     }
                 }
 
-                player.Node.Position = field.AddressToPosition(player.Position).Item1;
+                player.View.Position = field.AddressToPosition(player.Position).Item1;
             }
             if(Engine.Keyboard.GetKeyState(Key.W) == ButtonState.Push)
             {
@@ -128,15 +110,15 @@ namespace SelfDefence
 
         void UpdateLand()
         {
-            var candidate = Land.LayerObjects.Where(land => land.Value.isEdge).ToArray();
+            var candidate = Land.LayerObjects.Where(land => land.Value is Tile tile && tile.isEdge).ToArray();
 
             var target = new Random().Next(0, candidate.Length);
 
-            var cutSize = new Vector2I(5, 5);
+            var cutSize = new Vector2I(10, 10);
 
             var direction = new Random().Next(0, 4);
 
-            cutSize *= direction switch
+            var cutDirection = direction switch
             {
                 0 => new Vector2I(1, 1),
                 1 => new Vector2I(-1, 1),
@@ -144,18 +126,20 @@ namespace SelfDefence
                 _ => new Vector2I(1, -1)
             };
 
+            cutSize *= cutDirection;
+
             var targetPoint = candidate[target].Key;
             var diagramPoint = targetPoint + cutSize;
 
             for (int i = targetPoint.X; i != diagramPoint.X; i += cutSize.X / Math.Abs(cutSize.X))
                 for (int j = targetPoint.Y; j != diagramPoint.Y; j += cutSize.Y / Math.Abs(cutSize.Y))
                 {
-                    if(i == targetPoint.X || i == diagramPoint.X - cutSize.X / Math.Abs(cutSize.X) || j == targetPoint.Y || j == diagramPoint.Y - cutSize.Y / Math.Abs(cutSize.Y))
+                    if(i == targetPoint.X || j == targetPoint.Y)
                     {
                         var pos = new Vector2I(i, j);
-                        if(Land.LayerObjects.TryGetValue(pos, out var obj))
+                        if(Land.LayerObjects.TryGetValue(pos, out var obj) && obj is Tile tile)
                         {
-                            obj.State -= 100;
+                            tile.State -= 100;
                         }
                     }
                 }
