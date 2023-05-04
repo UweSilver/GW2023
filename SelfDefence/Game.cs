@@ -16,7 +16,8 @@ namespace SelfDefence
         TileFieldObjectLayer<Entity> Entity = new();
         TileFieldObjectLayer<ItemClass> FlyingEntity = new();
 
-        Player player;
+        Player player1;
+        Player player2;
 
         float CrackTimer;
         float ItemTimer;
@@ -64,10 +65,15 @@ namespace SelfDefence
 
             //init player
             {
-                player = new Player(new Vector2I(10, 10), field.UnitSize, field.AddressToPosition);
+                player1 = new Player(new Vector2I(10, 10), field.UnitSize, field.AddressToPosition);
 
-                Entity.LayerObjects.Add(player.Position, player);
-                scene.AddNode(player.View);
+                Entity.LayerObjects.Add(player1.Position, player1);
+                scene.AddNode(player1.View);
+
+                player2 = new Player(new Vector2I(25, 10), field.UnitSize, field.AddressToPosition);
+
+                Entity.LayerObjects.Add(player2.Position, player2);
+                scene.AddNode(player2.View);
             }
         }
 
@@ -133,7 +139,7 @@ namespace SelfDefence
 
         void UpdatePlayer()
         {
-            void Move(Vector2I vec)
+            void Move(Vector2I vec, Player player)
             {
                 if (Land.LayerObjects.TryGetValue(player.Position + vec, out var land) && !Entity.LayerObjects.ContainsKey(player.Position + vec))
                 {
@@ -145,72 +151,97 @@ namespace SelfDefence
                     }
                 }
 
-                player.UpdateView();
+                player1.UpdateView();
             }
             if(Engine.Keyboard.GetKeyState(Key.W) == ButtonState.Push)
             {
-                Move(new Vector2I(0, -1));
-                player.Direction = new Vector2I(0, -1);
+                Move(new Vector2I(0, -1), player1);
+                player1.Direction = new Vector2I(0, -1);
             }
             if(Engine.Keyboard.GetKeyState(Key.A) == ButtonState.Push)
             {
-                Move(new Vector2I(-1, 0));
-                player.Direction = new Vector2I(-1, 0);
+                Move(new Vector2I(-1, 0), player1);
+                player1.Direction = new Vector2I(-1, 0);
             }
             if(Engine.Keyboard.GetKeyState(Key.S) == ButtonState.Push)
             {
-                Move(new Vector2I(0, 1));
-                player.Direction = new Vector2I(0, 1);
+                Move(new Vector2I(0, 1), player1);
+                player1.Direction = new Vector2I(0, 1);
             }
             if(Engine.Keyboard.GetKeyState(Key.D) == ButtonState.Push)
             {
-                Move(new Vector2I(1, 0));
-                player.Direction = new Vector2I(1, 0);
+                Move(new Vector2I(1, 0), player1);
+                player1.Direction = new Vector2I(1, 0);
             }
-            if(Engine.Keyboard.GetKeyState(Key.E) == ButtonState.Push)
+
+            if (Engine.Keyboard.GetKeyState(Key.I) == ButtonState.Push)
             {
-                if(player.Inventory != null)
+                Move(new Vector2I(0, -1), player2);
+                player2.Direction = new Vector2I(0, -1);
+            }
+            if (Engine.Keyboard.GetKeyState(Key.J) == ButtonState.Push)
+            {
+                Move(new Vector2I(-1, 0), player2);
+                player2.Direction = new Vector2I(-1, 0);
+            }
+            if (Engine.Keyboard.GetKeyState(Key.K) == ButtonState.Push)
+            {
+                Move(new Vector2I(0, 1), player2);
+                player2.Direction = new Vector2I(0, 1);
+            }
+            if (Engine.Keyboard.GetKeyState(Key.L) == ButtonState.Push)
+            {
+                Move(new Vector2I(1, 0), player2);
+                player2.Direction = new Vector2I(1, 0);
+            }
+
+            if (Engine.Keyboard.GetKeyState(Key.E) == ButtonState.Push)
+            {
+                if(player1.Inventory != null)
                 {
                     //use/release
-                    if(player.Inventory is Footing footing)
+                    if(player1.Inventory is Footing footing)
                     {
-                        var focusPos = player.Position + player.Direction;
+                        var focusPos = player1.Position + player1.Direction;
                         if(Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State < 100)
                         {
                             tile.State = 100;
-                            player.Inventory = null;
+                            player1.Inventory = null;
                         }
                         else if(land is Rod)
                         {
                             CrackTimer -= 5;
-                            player.Inventory = null;
+                            player1.Inventory = null;
                         }
                     }
-                    else if(player.Inventory is Bomb bomb)
+                    else if(player1.Inventory is Bomb bomb)
                     {
-                        var focusPos = player.Position + player.Direction * 3;
+                        var focusPos = player1.Position + player1.Direction * 3;
                         if(Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State > 0)
                         {
                             tile.State = 0;
-                            player.Inventory = null;
+                            player1.Inventory = null;
                         }
                     }
                 }
                 else
                 {
                     //grub
-                    var focusPos = player.Position + player.Direction;
+                    var focusPos = player1.Position + player1.Direction;
                     if(Entity.LayerObjects.TryGetValue(focusPos, out var entity))
                     {
                         if(entity is DroppedItem item)
                         {
-                            player.Inventory = item.Content;
+                            player1.Inventory = item.Content;
                             Entity.LayerObjects.Remove(item.Position);
                             scene.RemoveNode(item.View);
                         }
                     }
                 }
             }
+
+
+
         }
 
         void UpdateFlyingItems()
@@ -376,7 +407,7 @@ namespace SelfDefence
                         return true;
                     }
 
-                    if (!(Land.LayerObjects[address] is Tile tile && tile.State > player.WalkableLandState))
+                    if (!(Land.LayerObjects[address] is Tile tile && tile.State > player1.WalkableLandState))
                     {
                         continue;
                     }
@@ -413,7 +444,7 @@ namespace SelfDefence
                     if (check[i][j]) continue;
                     if(Land.LayerObjects.TryGetValue(new Vector2I(i, j), out var obj))
                     {
-                        if((obj is Tile t && t.State > player.WalkableLandState))
+                        if((obj is Tile t && t.State > player1.WalkableLandState))
                         {
                             var queue = new Queue<Vector2I>();
                             connectedToRod[i][j] = isReachable(new Vector2I(i, j), field.Size, (_) => { check[_.X][_.Y] = true; queue.Enqueue(_); });
