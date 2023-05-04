@@ -186,6 +186,15 @@ namespace SelfDefence
                             player.Inventory = null;
                         }
                     }
+                    else if(player.Inventory is Bomb bomb)
+                    {
+                        var focusPos = player.Position + player.Direction * 3;
+                        if(Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State > 0)
+                        {
+                            tile.State = 0;
+                            player.Inventory = null;
+                        }
+                    }
                 }
                 else
                 {
@@ -337,7 +346,7 @@ namespace SelfDefence
             var rand = new Random();
             for (Vector2I address = target * (new Vector2I(1, 1) - direction); address.X < field.Size.X && address.Y < field.Size.Y; address += direction)
             {
-                if (Land.LayerObjects.TryGetValue(address, out var obj) && obj is Tile tile && rand.Next(0, 100) > 60)
+                if (Land.LayerObjects.TryGetValue(address, out var obj) && obj is Tile tile && rand.Next(0, 100) > 40)
                 {
                     tile.State -= 5;
                 }
