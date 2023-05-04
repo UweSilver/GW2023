@@ -19,9 +19,9 @@ namespace SelfDefence
         
         public Game()
         {
-            scene = new(0b1, 0b01, 1);
+            scene = new(0b11, 0b01, 1);
 
-            //scene.CameraNode.Scale *= 1.5f;
+            
 
             //init field
             var fieldSize = new Vector2I(55, 55);
@@ -32,8 +32,8 @@ namespace SelfDefence
             {
                 for(int j = 0; j < fieldSize.Y; j++)
                 {
-                    var typeIdx = new Random().Next(1, 100);
-                    if(typeIdx < 99) //normal tile
+                    var typeIdx = new Random().Next(1, 1000);
+                    if(typeIdx < 990) //normal tile
                     {
                         int value = new Random().Next(100, 100);
 
@@ -77,7 +77,7 @@ namespace SelfDefence
 
             }
             if (Engine.Keyboard.GetKeyState(Key.G) == ButtonState.Push)
-                Console.WriteLine(Land.isReachable(player.Position, field.Size, (_) => _ is Tile t && t.State > player.WalkableLandState, (_) => _ is Rod));
+                CheckLand();
             //scene.CameraNode.Scale *= 0.999f;
         }
 
@@ -188,5 +188,92 @@ namespace SelfDefence
                     }
                 }
             }
+
+        void CheckLand()
+        {
+            bool isReachable(Vector2I startAddress, Vector2I fieldSize ,Action<Vector2I> connectedAdd)
+            {
+                bool[][] field = new bool[fieldSize.X][];
+                for (int i = 0; i < fieldSize.X; i++)
+                {
+                    field[i] = new bool[fieldSize.Y];
+                }
+
+                Queue<Vector2I> queue = new();
+                queue.Enqueue(startAddress);
+                field[startAddress.X][startAddress.Y] = true;
+
+                while (queue.TryDequeue(out var address))
+                {
+
+                    if ((Land.LayerObjects[address]) is Rod)
+                    {
+                        connectedAdd(address);
+                        return true;
+                    }
+
+                    if (!(Land.LayerObjects[address] is Tile tile && tile.State > player.WalkableLandState))
+                    {
+                        continue;
+                    }
+
+                    var neighbour = Enumerable.Range(0, 9).Select(i => new Vector2I(i / 3, i % 3) - new Vector2I(1, 1)).Where(v => v.X != v.Y && (v.X == 0 || v.Y == 0))
+                        .Select(v => v + address)
+                        .Where(v => 0 <= v.X && v.X < fieldSize.X && 0 <= v.Y && v.Y < fieldSize.Y)
+                        .Where(v => !field[v.X][v.Y])
+                        .Where(key => Land.LayerObjects.ContainsKey(key));
+                    connectedAdd(address);
+
+                    foreach (var n in neighbour)
+                    {
+                        queue.Enqueue(n);
+                        field[n.X][n.Y] = true;
+                    }
+                }
+
+                return false;
+            }
+            bool[][] check = new bool[field.Size.X][];
+            bool[][] connectedToRod = new bool[field.Size.X][];
+
+            for(int i = 0; i < field.Size.X; i++)
+            {
+                check[i] = new bool[field.Size.Y];
+                connectedToRod[i] = new bool[field.Size.Y];
+            }
+
+            int count = 0;
+                for(int i = 0; i < field.Size.X; i++)
+                    for(int j = 0; j < field.Size.Y; j++)
+                    {
+                        if (check[i][j]) break;
+                        if(Land.LayerObjects.TryGetValue(new Vector2I(i, j), out var obj))
+                        {
+                            if((obj is Tile t && t.State > player.WalkableLandState))
+                            {
+                                var queue = new Queue<Vector2I>();
+                                connectedToRod[i][j] = isReachable(new Vector2I(i, j), field.Size, (_) => { check[_.X][_.Y] = true; queue.Enqueue(_); });
+
+                                foreach(var p in queue)
+                                {
+                                    check[p.X][p.Y] = true;
+                                    connectedToRod[p.X][p.Y] = connectedToRod[i][j];
+                                }
+                                count += queue.Count();
+                            }
+                        }
+                    }
+
+            for(int i = 0; i < field.Size.X; i++)
+                for(int j = 0; j < field.Size.Y; j++)
+                {
+                    if (check[i][j] && (!connectedToRod[i][j]))
+                        if(Land.LayerObjects.TryGetValue(new Vector2I(i, j), out var land ))
+                            if(land is Tile tile)
+                            {
+                                tile.State = 0;
+                            }
+                }
+        }
     }
 }

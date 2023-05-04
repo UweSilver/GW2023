@@ -50,13 +50,11 @@ namespace SelfDefence
 
                 if (isTarget(LayerObjects[address]))
                 {
-                    //Console.WriteLine(address + " is rod");
                     return true;
                 }
 
                 if (!canPass(LayerObjects[address]))
                 {
-                    //Console.WriteLine(address + " cannot pass");
                     continue;
                 }
 
@@ -67,7 +65,6 @@ namespace SelfDefence
                     .Where(key => LayerObjects.ContainsKey(key));
 
 
-                //Console.WriteLine(address + " has " + neighbour.Count() + "neighbours");
                 foreach (var n in neighbour)
                 {
                     queue.Enqueue(n);

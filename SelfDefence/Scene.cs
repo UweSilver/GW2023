@@ -26,7 +26,12 @@ namespace SelfDefence
             rootNode = new Node();
             Engine.AddNode(rootNode);
 
-            SplitScreen(cameraNum);
+            var cam = new CameraNode();
+            cam.Group = sceneCameraGroup;
+            cam.Scale *= 2;
+            Engine.AddNode(cam);
+
+            //SplitScreen(cameraNum);
         }
 
         public void AddNode(ShapeNode node)
@@ -46,7 +51,7 @@ namespace SelfDefence
 
             for (int i = 0; i < num; i++)
             {
-                var renderTarget = RenderTexture.Create(screenSize , TextureFormat.R8G8B8A8_UNORM);
+                var renderTarget = RenderTexture.Create(screenSize * 2, TextureFormat.R8G8B8A8_UNORM);
                 renderTargets.Add(renderTarget);
 
                 var rectangleNode = new RectangleNode();

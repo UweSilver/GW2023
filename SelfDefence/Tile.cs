@@ -50,6 +50,7 @@ namespace SelfDefence
         {
             Node.Color = new Color((byte)(100 * State / 100), 80, 10);
         }
+
     }
 
     class Rod : Land
