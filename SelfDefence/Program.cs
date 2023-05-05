@@ -6,14 +6,15 @@ using System.Linq;
 Vector2I WindowSize = new Vector2I(720 / 9 * 16, 720);
 
 Engine.Initialize("Game", WindowSize.X, WindowSize.Y, new Configuration{ DeviceType = GraphicsDevice.DirectX12, ConsoleLoggingEnabled = true, });
-
-var game = new Game();
+bool finished = false;
+var game = new Game((_) => { Console.WriteLine(_ + "WIN!"); finished = true; });
 
 while (Engine.DoEvents())
 {
     Engine.Update();
     
-    game.Update();
+    if(!finished)
+        game.Update();
 
     if (Engine.Keyboard.GetKeyState(Key.Escape) == ButtonState.Push)
     {

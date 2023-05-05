@@ -18,30 +18,42 @@ namespace SelfDefence
 
         Player player1;
         Player player2;
+        RespawnPoint respawn1;
+        RespawnPoint respawn2;
 
         float CrackTimer;
         float ItemTimer;
+
+        Action<int> winnerNotify;
                 
-        public Game()
+        public Game(Action<int> winnerNotify)
         {
+            this.winnerNotify = winnerNotify;
+
             scene = new(0b11, 0b01, 1);
 
             //init field
-            var fieldSize = new Vector2I(45, 25);
+            var fieldSize = new Vector2I(35, 15);
             var fieldUnitSize = new Vector2F(30, 30);
             field = new(fieldSize, fieldUnitSize);
 
             var getPos = field.AddressToPosition(fieldSize / 2);
             scene.MainCamera.Scale *= 1.2f;
             scene.MainCamera.Position = (!getPos.Item2 ? getPos.Item1 : new Vector2F(0, 0)) - Engine.WindowSize.To2F() * 1.2f / 2.0f;
-            //scene.MainCamera.Position = new Vector2F(0, 0);
+
+
+            List<Vector2I> rodPos = new();
+            var rand = new Random();
+            for(int i = 0; i < 1; i++)
+            {
+                rodPos.Add(new Vector2I(rand.Next(0, field.Size.X), rand.Next(0, field.Size.Y)));
+            }
 
             for (int i = 0; i < fieldSize.X; i++)
             {
                 for(int j = 0; j < fieldSize.Y; j++)
                 {
-                    var typeIdx = new Random().Next(1, 1000);
-                    if(typeIdx < 990) //normal tile
+                    if(!rodPos.Contains(new Vector2I(i, j))) //normal tile
                     {
                         int value = new Random().Next(100, 100);
 
@@ -65,16 +77,29 @@ namespace SelfDefence
 
             //init player
             {
-                player1 = new Player(new Vector2I(10, 10), field.UnitSize, field.AddressToPosition);
+                player1 = new Player(1, new Vector2I(10, 10), field.UnitSize, field.AddressToPosition, new Color(150, 10, 10));
 
                 Entity.LayerObjects.Add(player1.Position, player1);
                 scene.AddNode(player1.View);
 
-                player2 = new Player(new Vector2I(25, 10), field.UnitSize, field.AddressToPosition);
+                respawn1 = new RespawnPoint(1, field.UnitSize, new Color(150, 10, 10));
+                DroppedItem spawn1 = new(field.AddressToPosition) { Position = new Vector2I(12, 12), Content = respawn1};
+                spawn1.UpdateView();
+                Entity.LayerObjects.Add(spawn1.Position, spawn1);
+                scene.AddNode(spawn1.Content.View);
+
+                player2 = new Player(2, new Vector2I(25, 10), field.UnitSize, field.AddressToPosition, new Color(10, 10, 150));
 
                 Entity.LayerObjects.Add(player2.Position, player2);
                 scene.AddNode(player2.View);
+
+                respawn2 = new RespawnPoint(2, field.UnitSize, new Color(10, 10, 150));
+                DroppedItem spawn2 = new(field.AddressToPosition) { Position = new Vector2I(27, 12), Content = respawn2 };
+                spawn2.UpdateView();
+                Entity.LayerObjects.Add(spawn2.Position, spawn2);
+                scene.AddNode(spawn2.Content.View);
             }
+
         }
 
         public void Update()
@@ -217,9 +242,23 @@ namespace SelfDefence
                     else if(player1.Inventory is Bomb bomb)
                     {
                         var focusPos = player1.Position + player1.Direction * 3;
-                        if(Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State > 0)
+                        var target = Enumerable.Range(0, 9).Select(i => new Vector2I(i / 3 - 1, i % 3 - 1) + focusPos);
+                        foreach(var t in target)
+                            if(Land.LayerObjects.TryGetValue(t, out var land) && land is Tile tile && tile.State > 0)
+                            {
+                                tile.State = 0;
+                            }
+                        player1.Inventory = null;
+                    }
+                    else if(player1.Inventory is RespawnPoint respawn)
+                    {
+                        var focusPos = player1.Position + player1.Direction;
+                        if(Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State > player1.WalkableLandState && !Entity.LayerObjects.ContainsKey(focusPos))
                         {
-                            tile.State = 0;
+                            DroppedItem item = new(field.AddressToPosition) { Position = focusPos, Content = respawn};
+                            item.UpdateView();
+                            Entity.LayerObjects.Add(item.Position, item);
+                            scene.AddNode(item.Content.View);
                             player1.Inventory = null;
                         }
                     }
@@ -240,8 +279,62 @@ namespace SelfDefence
                 }
             }
 
-
-
+            if (Engine.Keyboard.GetKeyState(Key.O) == ButtonState.Push)
+            {
+                if (player2.Inventory != null)
+                {
+                    //use/release
+                    if (player2.Inventory is Footing footing)
+                    {
+                        var focusPos = player2.Position + player2.Direction;
+                        if (Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State < 100)
+                        {
+                            tile.State = 100;
+                            player2.Inventory = null;
+                        }
+                        else if (land is Rod)
+                        {
+                            CrackTimer -= 5;
+                            player2.Inventory = null;
+                        }
+                    }
+                    else if (player2.Inventory is Bomb bomb)
+                    {
+                        var focusPos = player2.Position + player2.Direction * 3;
+                        if (Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State > 0)
+                        {
+                            tile.State = 0;
+                            player2.Inventory = null;
+                        }
+                    }
+                    else if (player2.Inventory is RespawnPoint respawn)
+                    {
+                        var focusPos = player2.Position + player2.Direction;
+                        if (Land.LayerObjects.TryGetValue(focusPos, out var land) && land is Tile tile && tile.State > player2.WalkableLandState && !Entity.LayerObjects.ContainsKey(focusPos))
+                        {
+                            DroppedItem item = new(field.AddressToPosition) { Position = focusPos, Content = respawn };
+                            item.UpdateView();
+                            Entity.LayerObjects.Add(item.Position, item);
+                            scene.AddNode(item.Content.View);
+                            player2.Inventory = null;
+                        }
+                    }
+                }
+                else
+                {
+                    //grub
+                    var focusPos = player2.Position + player2.Direction;
+                    if (Entity.LayerObjects.TryGetValue(focusPos, out var entity))
+                    {
+                        if (entity is DroppedItem item)
+                        {
+                            player2.Inventory = item.Content;
+                            Entity.LayerObjects.Remove(item.Position);
+                            scene.RemoveNode(item.View);
+                        }
+                    }
+                }
+            }
         }
 
         void UpdateFlyingItems()
@@ -269,10 +362,19 @@ namespace SelfDefence
 
                     if(item.Value is Footing footing)
                     {
-                        var dropped = new DroppedItem(field.AddressToPosition) { Content = item.Value, Position = item.Key };
-                        //scene.AddNode(dropped.View);
-                        dropped.UpdateView();
-                        Entity.LayerObjects.Add(item.Key, dropped);
+                        if (Entity.LayerObjects.TryGetValue(item.Key, out var entity) && entity is Player p && p.Inventory == null)
+                        {
+                            p.Inventory = footing;
+                            scene.RemoveNode(footing.View);
+                        }
+                        else
+                        {
+
+                            var dropped = new DroppedItem(field.AddressToPosition) { Content = item.Value, Position = item.Key };
+                            //scene.AddNode(dropped.View);
+                            dropped.UpdateView();
+                            Entity.LayerObjects.Add(item.Key, dropped);
+                        }
                         removelist.Enqueue(item.Key);
                     }
                     else if(item.Value is Bomb bomb)
@@ -310,6 +412,18 @@ namespace SelfDefence
 
             foreach(var v in remove)
             {
+                if (Entity.LayerObjects[v] is Player player)
+                {
+                    player.Position = Entity.LayerObjects.Where(obj => obj.Value is DroppedItem dropped && dropped.Content is RespawnPoint respawn && respawn.ID == player.ID).First().Key;
+                    player.UpdateView();
+                }
+                else if (Entity.LayerObjects[v] is DroppedItem dropped && dropped.Content is RespawnPoint respawn)
+                {
+                    winnerNotify((int)(3 - respawn.ID));
+                    break;
+                }
+
+                scene.RemoveNode(Entity.LayerObjects[v].View);
                 Entity.LayerObjects.Remove(v);
             }
         }
@@ -320,7 +434,7 @@ namespace SelfDefence
             {
                 if(tile.State < 100)
                 {
-                    tile.State-= 100 * (1 / Engine.CurrentFPS);
+                    tile.State-= 5 * (1 / Engine.CurrentFPS);
                 }
             }
         }
@@ -377,7 +491,7 @@ namespace SelfDefence
             var rand = new Random();
             for (Vector2I address = target * (new Vector2I(1, 1) - direction); address.X < field.Size.X && address.Y < field.Size.Y; address += direction)
             {
-                if (Land.LayerObjects.TryGetValue(address, out var obj) && obj is Tile tile && rand.Next(0, 100) > 40)
+                if (Land.LayerObjects.TryGetValue(address, out var obj) && obj is Tile tile && rand.Next(0, 100) > 20)
                 {
                     tile.State -= 5;
                 }

@@ -48,7 +48,8 @@ namespace SelfDefence
 
         private void UpdateColor()
         {
-            Node.Color = new Color((byte)(100 * State / 100), 80, 10);
+
+            Node.Color = new Color(100, (byte)(80 + 20 * (100 - State) / 100), (byte)(10 + 90 * ((100 - State) / 100)));
         }
 
         public void UpdateView()
@@ -74,7 +75,7 @@ namespace SelfDefence
             Node.VertNum = 5;
             var getPos = address2WorldPos(Position);
             Node.Position = !getPos.isError ? getPos.position : new Vector2F(0, 0);
-            Node.Color = new Color(250, 250, 250);
+            Node.Color = new Color(200, 200, 200);
         }
 
         public void UpdateView() { }

@@ -70,9 +70,11 @@ namespace SelfDefence
 
     class Player : Character
     {
-        public Player(Vector2I address, Vector2F unitSize, Address2WorldPos address2WorldPos) : base(address, unitSize, address2WorldPos) 
+        public uint ID { get; }
+        public Player(uint id, Vector2I address, Vector2F unitSize, Address2WorldPos address2WorldPos, Color color) : base(address, unitSize, address2WorldPos) 
         {
-            Node.Color = new Color(10, 10, 150);
+            Node.Color = color;
+            this.ID = id;
         }
     }
 

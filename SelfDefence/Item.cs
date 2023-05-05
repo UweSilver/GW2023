@@ -78,17 +78,6 @@ namespace SelfDefence
 
     class Bomb : ItemClass
     {
-        public void Use(Vector2I targetAddress, TileFieldObjectLayer<Land> field)
-        {
-            if (field.LayerObjects.TryGetValue(targetAddress, out var land))
-            {
-                if (land is Tile tile && tile.State > 0)
-                {
-                    tile.State = 0;
-                }
-            }
-        }
-
         public float Height { get; set; }
 
         public Bomb(Vector2F unitSize)
@@ -111,11 +100,11 @@ namespace SelfDefence
 
     class RespawnPoint : ItemClass
     {
-        public RespawnPoint(Vector2F unitSize, Color color)
+        public RespawnPoint(uint id,Vector2F unitSize, Color color)
         {
             var star = new PolygonNode();
             var vertices = new List<Vertex>();
-            for(int i = 0; i < 5; i++)
+            for(int i = 0; i < 7; i++)
             {
                 var Rad = unitSize.X * 0.9f * 0.5f;
                 var rad = unitSize.X * 0.3f * 0.5f;
@@ -128,7 +117,11 @@ namespace SelfDefence
             star.Vertexes = vertices;
 
             node.Add(star);
+
+            ID = id;
         }
+
+        public uint ID { get; }
 
         List<PolygonNode> node = new();
         public IEnumerable<IDrawn> View => node;

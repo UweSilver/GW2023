@@ -29,6 +29,8 @@ namespace SelfDefence
 
             MainCamera = new CameraNode();
             MainCamera.Group = sceneCameraGroup;
+            MainCamera.IsColorCleared = true;
+            MainCamera.ClearColor = new Color(100, 100, 100);
             Engine.AddNode(MainCamera);
 
             //SplitScreen(cameraNum);
