@@ -25,6 +25,10 @@ namespace SelfDefence
         float ItemTimer;
 
         Action<int> winnerNotify;
+
+        SpriteNode CountDown;
+        bool countdownActive = false;
+        Texture2D[] CountDownTextures = new Texture2D[4];
                 
         public Game(Action<int> winnerNotify)
         {
@@ -100,12 +104,41 @@ namespace SelfDefence
                 scene.AddNode(spawn2.Content.View);
             }
 
+
+            CountDown = new SpriteNode();
+            for(int i = 3; i >= 0; i--)
+            {
+                CountDownTextures[i] = Texture2D.Load((i + 1) + @".png");
+            }
+            CountDown.Scale *= 0.6f;
+            CountDown.Position = new Vector2I(Engine.WindowSize.X / 2, Engine.WindowSize.Y) - CountDownTextures[0].Size;
         }
 
         public void Update()
         {
             CrackTimer += (1 / Engine.CurrentFPS);
             ItemTimer += (1 / Engine.CurrentFPS);
+
+            var idx = (int)MathF.Floor(5 - CrackTimer);
+
+            if (0 <= idx && idx < 4)
+            {
+                if (!countdownActive)
+                {
+                    scene.AddNode(new IDrawn[] { CountDown });
+                    countdownActive = true;
+                }
+                CountDown.Texture = CountDownTextures[idx];
+            }
+            else if (idx <= 0) { }
+            else
+            {
+                if (countdownActive)
+                {
+                    scene.RemoveNode(new IDrawn[] { CountDown });
+                    countdownActive = false;
+                }
+            }
 
             UpdatePlayer();
             UpdateFlyingItems();

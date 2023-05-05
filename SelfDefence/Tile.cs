@@ -48,8 +48,12 @@ namespace SelfDefence
 
         private void UpdateColor()
         {
-
             Node.Color = new Color(100, (byte)(80 + 20 * (100 - State) / 100), (byte)(10 + 90 * ((100 - State) / 100)));
+
+            if(0 < State && State < 100)
+            {
+                Node.Color += new Color(30, 0, 0);
+            }
         }
 
         public void UpdateView()

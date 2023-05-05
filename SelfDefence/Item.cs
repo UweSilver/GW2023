@@ -104,7 +104,7 @@ namespace SelfDefence
         {
             var star = new PolygonNode();
             var vertices = new List<Vertex>();
-            for(int i = 0; i < 7; i++)
+            for(int i = 0; i < 5; i++)
             {
                 var Rad = unitSize.X * 0.9f * 0.5f;
                 var rad = unitSize.X * 0.3f * 0.5f;
@@ -114,8 +114,8 @@ namespace SelfDefence
                 vertices.Add(new Vertex( new Vector3F(Rad * MathF.Cos(angle0), Rad * MathF.Sin(angle0), 0), color, new Vector2F(0, 0), new Vector2F(0, 0)));
                 vertices.Add(new Vertex(new Vector3F(rad * MathF.Cos(angle1), rad * MathF.Sin(angle1), 0), color, new Vector2F(0, 0), new Vector2F(0, 0)));
             }
+            vertices.Add(vertices[0]);
             star.Vertexes = vertices;
-
             node.Add(star);
 
             ID = id;

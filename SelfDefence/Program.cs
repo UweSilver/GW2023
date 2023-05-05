@@ -12,9 +12,11 @@ var game = new Game((_) => { Console.WriteLine(_ + "WIN!"); finished = true; });
 while (Engine.DoEvents())
 {
     Engine.Update();
-    
-    if(!finished)
+
+    if (!finished)
         game.Update();
+    else
+        break;
 
     if (Engine.Keyboard.GetKeyState(Key.Escape) == ButtonState.Push)
     {
